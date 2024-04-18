@@ -70,12 +70,11 @@ app.get('/api/ccs/expert/get-all-experts', async (req, res) => {
 });
 
 app.post('/api/ccs/expert/create', async (req, res) => {
-    const { account_id, app_id, category_id, label_one, label_two, relevant_one, label_one_desc, label_two_desc, relevant_two } = req.body;
-
+    const { account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c } = req.body;
     try {
         const insertResult = await pool.query(
-            'INSERT INTO ccs_expert (account_id, app_id, category_id, label_one, label_two, relevant_one, label_one_desc, label_two_desc, relevant_two) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [account_id, app_id, category_id, label_one, label_two, relevant_one, label_one_desc, label_two_desc, relevant_two]
+            'INSERT INTO ccs_expert (account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c]
         );
         res.status(201).send({ message: "Expert created successfully" });
     } catch (error) {
