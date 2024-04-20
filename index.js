@@ -59,7 +59,11 @@ app.get('/api/ccs/category/get-all-categories', async (req, res) => {
 });
 
 app.get('/api/ccs/expert/get-all-experts', async (req, res) => {
-    const query = `SELECT * FROM ccs_expert`;
+    const query = `
+        SELECT e.*, a.account_email
+        FROM ccs_expert e
+        JOIN ccs_account a ON e.account_id = a.account_id
+    `;
     try {
         const [results] = await pool.query(query);
         res.json(results);
@@ -71,15 +75,32 @@ app.get('/api/ccs/expert/get-all-experts', async (req, res) => {
 
 app.post('/api/ccs/expert/create', async (req, res) => {
     const { account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c } = req.body;
+
     try {
-        const insertResult = await pool.query(
-            'INSERT INTO ccs_expert (account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c]
+        // First, check if the expert already exists
+        const checkResult = await pool.query(
+            'SELECT * FROM ccs_expert WHERE account_id = ? AND app_id = ?',
+            [account_id, app_id]
         );
-        res.status(201).send({ message: "Expert created successfully" });
+
+        if (checkResult[0].length > 0) {
+            // Record exists, perform an update
+            const updateResult = await pool.query(
+                'UPDATE ccs_expert SET category_id = ?, label_one_s = ?, label_two_s = ?, relevant_one_s = ?, label_one_desc_s = ?, label_two_desc_s = ?, relevant_two_s = ?, label_one_c = ?, label_two_c = ?, relevant_one_c = ?, label_one_desc_c = ?, label_two_desc_c = ?, relevant_two_c = ? WHERE account_id = ? AND app_id = ?',
+                [category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c, account_id, app_id]
+            );
+            res.status(200).send({ message: "Expert updated successfully" });
+        } else {
+            // Record does not exist, perform an insert
+            const insertResult = await pool.query(
+                'INSERT INTO ccs_expert (account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [account_id, app_id, category_id, label_one_s, label_two_s, relevant_one_s, label_one_desc_s, label_two_desc_s, relevant_two_s, label_one_c, label_two_c, relevant_one_c, label_one_desc_c, label_two_desc_c, relevant_two_c]
+            );
+            res.status(201).send({ message: "Expert created successfully" });
+        }
     } catch (error) {
-        console.error('Error creating an expert', error.message);
-        res.status(500).send('Error creating an expert');
+        console.error('Error processing expert data', error.message);
+        res.status(500).send('Error processing expert data');
     }
 });
 
